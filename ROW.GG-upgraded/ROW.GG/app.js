@@ -41,10 +41,10 @@ function home(){
  <div class="hero-stats"><div><b>13</b><span>PRODUCTS</span></div><div><b>01</b><span>COMMUNITY</span></div><div><b>∞</b><span>POSSIBILITIES</span></div></div></div>
  <div class="showcase-wrap reveal"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="showcase"><div class="showcase-top"><span class="muted">ROW.GG / PRODUCTS</span><span class="live-pill"><i></i> LIVE COLLECTION</span></div>
  ${[
- {name:"Madium", image:"images/app1.png"},
- {name:"Solara", image:"images/app2.png"},
- {name:"Codex", image:"images/app3.png"},
- {name:"Delta", image:"images/app4.png"}
+ {name:"Madium", image:"ROW.GG-upgraded/images/app1.png"},
+ {name:"Solara", image:"ROW.GG-upgradedimages/app2.png"}
+ {name:"Codex", image:"ROW.GG-upgradedimages/app3.png"},
+ {name:"Delta", image:"ROW.GG-upgradedimages/app4.png"}
 ].map((app,n)=>`
  <div class="row">
   <img class="appicon" src="${app.image}" alt="${app.name}">
