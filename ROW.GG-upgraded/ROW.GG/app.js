@@ -31,6 +31,7 @@ async function getNames(ids){
  const {data}=await sb.from("profiles").select("id,username").in("id",unique);
  return Object.fromEntries((data||[]).map(x=>[x.id,x.username]));
 }
+
 function home(){
  return `<section class="hero">
  <div class="hero-copy reveal"><div class="eyebrow"><span class="pulse-dot"></span> A better way to discover</div>
@@ -39,11 +40,23 @@ function home(){
  <div class="hero-actions"><a class="btn" href="/log-in">Browse Products <span>↗</span></a><a class="btn ghost" href="/sign-up">Join ROW.GG</a></div>
  <div class="hero-stats"><div><b>13</b><span>PRODUCTS</span></div><div><b>01</b><span>COMMUNITY</span></div><div><b>∞</b><span>POSSIBILITIES</span></div></div></div>
  <div class="showcase-wrap reveal"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="showcase"><div class="showcase-top"><span class="muted">ROW.GG / PRODUCTS</span><span class="live-pill"><i></i> LIVE COLLECTION</span></div>
- ${[1,2,3,4].map(n=>`<div class="row"><span class="appicon">${String(n).padStart(2,"0")}</span><span><b>APP${n}</b><small>ROW.GG application</small></span><em>Available</em></div>`).join("")}<div class="showcase-bottom"><span>13 products in collection</span><span class="mini-bars"><i></i><i></i><i></i><i></i><i></i></span></div></div><div class="float-chip chip-a">✦ Curated tools</div><div class="float-chip chip-b">★ Community rated</div></div></section>
+ ${[
+ {name:"Madium", image:"images/app1.png"},
+ {name:"Solara", image:"images/app2.png"},
+ {name:"Codex", image:"images/app3.png"},
+ {name:"Delta", image:"images/app4.png"}
+].map((app,n)=>`
+ <div class="row">
+  <img class="appicon" src="${app.image}" alt="${app.name}">
+  <span><b>${app.name}</b><small>ROW.GG application</small></span>
+  <em>Available</em>
+ </div>
+`).join("")}
  <section class="sectionhead reveal"><div><div class="eyebrow">Explore ROW.GG</div><h2>Built for <span class="gradient">discovery.</span></h2><p>Everything you need to find your next favorite application.</p></div><a class="text-link" href="/products">Explore collection ↗</a></section>
  <section class="feature-grid"><article class="feature-card reveal"><div class="feature-icon">⌕</div><h3>Find faster</h3><p>Search the collection and get straight to the tools you're looking for.</p></article><article class="feature-card reveal"><div class="feature-icon">★</div><h3>Community reviews</h3><p>See ratings and feedback shared by the ROW.GG community.</p></article><article class="feature-card reveal"><div class="feature-icon">◉</div><h3>Stay connected</h3><p>Join the general chat and connect with other members.</p></article></section>
- <footer class="site-footer"><span>© ROW.GG</span><span><a href="#" target="_blank" rel="noopener">YouTube — add link</a>　<a href="#" target="_blank" rel="noopener">Discord — add link</a></span></footer>`;
+ <footer class="site-footer"><span>© ROW.GG</span><span><a href="#" target="_blank" rel="noopener">YouTube — add link</a>　<a href="https://discord.gg/tEZUkXa97" target="_blank" rel="noopener">Discord ↗</a></span></footer>`;
 }
+
 function card(p){
  const r=productRatings[p.slug],rating=r?.avg?Number(r.avg).toFixed(1):"—",count=r?.count||0;
  return `<article class="card reveal" data-name="${p.name.toLowerCase()}"><a href="/products/${p.slug}"><div class="art"><span>${p.name}</span><i>↗</i></div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="/products/${p.slug}">Details ↗</a></div></article>`;
