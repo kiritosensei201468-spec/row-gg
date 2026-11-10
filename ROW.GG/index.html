@@ -3,81 +3,149 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#090909">
+  <meta name="theme-color" content="#090a10">
   <meta name="description" content="Discover applications, share reviews and connect with the ROW.GG community.">
   <title>ROW.GG — Discover More</title>
+
   <link rel="stylesheet" href="styles.css">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
+
 <body>
-  <header>
-    <a class="logo" href="/">R <b>ROW.GG</b></a>
-    <nav>
-      <button id="chat-open" class="chat-open-btn" aria-label="Open Global Chat" title="Global Chat">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/>
-          <path d="M8 11h.01M12 11h.01M16 11h.01"/>
-        </svg>
+
+<header>
+  <a class="logo" href="/">R <b>ROW.GG</b></a>
+
+  <nav>
+    <button id="chat-open" class="chat-open-btn" aria-label="Open Global Chat" title="Global Chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/>
+        <path d="M8 11h.01M12 11h.01M16 11h.01"/>
+      </svg>
+    </button>
+
+    <span id="auth-nav">
+      <a href="/log-in">Log in ↗</a>
+    </span>
+  </nav>
+</header>
+
+<main id="app">
+  <p>Loading ROW.GG…</p>
+</main>
+
+<div id="shade"></div>
+
+<aside id="chat">
+
+  <div class="chathead">
+    <div>
+      <b>ROW.GG General Chat</b>
+      <small>Community conversation</small>
+    </div>
+
+    <button id="chat-close" aria-label="Close chat">×</button>
+  </div>
+
+  <div id="chat-note">
+    <strong>Please sign in to start a conversation</strong>
+    <span>Log in to join the ROW.GG community chat.</span>
+  </div>
+
+  <div id="messages"></div>
+
+  <!-- Emoji picker -->
+  <section id="emoji-panel" class="emoji-picker" hidden>
+    <emoji-picker
+      id="emoji-picker"
+      locale="en"
+      skin-tone-emoji="👍">
+    </emoji-picker>
+  </section>
+
+  <!-- GIF picker -->
+  <section id="gif-panel" class="gif-picker" hidden>
+
+    <div class="gif-search-row">
+      <input
+        id="gif-search"
+        maxlength="50"
+        placeholder="Search GIFs..."
+        autocomplete="off"
+      >
+
+      <button type="button" id="gif-search-btn">
+        Search
       </button>
-      <span id="auth-nav"><a href="/log-in">Log in ↗</a></span>
-    </nav>
-  </header>
-
-  <main id="app">
-    <p>Loading ROW.GG…</p>
-  </main>
-
-  <div id="shade"></div>
-
-  <aside id="chat">
-    <div class="chathead">
-      <div>
-        <b>ROW.GG General Chat</b>
-        <small>Community conversation</small>
-      </div>
-      <button id="chat-close" aria-label="Close chat">×</button>
     </div>
 
-    <div id="chat-note">
-      <strong>Please sign in to start a conversation</strong>
-      <span>Log in to join the ROW.GG community chat.</span>
+    <div id="gif-status">
+      Search for a GIF to get started.
     </div>
 
-    <div id="messages"></div>
+    <div id="gif-results" class="gif-results"></div>
 
-    <div id="emoji-panel" class="emoji-picker" hidden>
-      <input id="emoji-search" type="search" placeholder="Search emojis..." autocomplete="off">
-      <div id="emoji-categories" class="emoji-categories"></div>
-      <div id="emoji-grid" class="emoji-grid"></div>
+    <div class="giphy-attribution">
+      Powered by <strong>GIPHY</strong>
     </div>
 
-    <div id="gif-panel" class="gif-picker" hidden>
-      <div class="gif-search-row">
-        <input id="gif-search" type="search" placeholder="Search GIFs..." autocomplete="off">
-        <button type="button" id="gif-search-btn">Search</button>
-      </div>
-      <div id="gif-status">Search for a GIF to get started.</div>
-      <div id="gif-results" class="gif-results"></div>
+  </section>
+
+  <!-- Chat input -->
+  <form id="chat-form">
+
+    <div class="chat-tools">
+
+      <button
+        type="button"
+        id="emoji-toggle"
+        title="Emojis"
+        aria-label="Open emoji picker">
+        ☺
+      </button>
+
+      <button
+        type="button"
+        id="gif-toggle"
+        title="Search GIFs"
+        aria-label="Search GIFs">
+        GIF
+      </button>
+
+      <label for="chat-file" title="Upload photo or video">
+        ＋
+      </label>
+
+      <input
+        id="chat-file"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+        hidden
+      >
+
     </div>
 
-    <form id="chat-form">
-      <div class="chat-tools">
-        <button type="button" id="emoji-toggle" title="Emojis">☺</button>
-        <button type="button" id="gif-toggle" title="Search GIFs">GIF</button>
-        <label for="chat-file" title="Upload photo or video">＋</label>
-        <input id="chat-file" type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
-          hidden>
-      </div>
+    <input
+      id="chat-input"
+      maxlength="1000"
+      placeholder="Write a message..."
+      autocomplete="off"
+    >
 
-      <input id="chat-input" maxlength="1000" placeholder="Write a message…" autocomplete="off">
-      <button class="chat-send" type="submit" aria-label="Send message">↑</button>
-    </form>
-  </aside>
+    <button class="chat-send" aria-label="Send message">
+      ↑
+    </button>
 
-  <div id="toast" role="status" aria-live="polite"></div>
+  </form>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+</aside>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
