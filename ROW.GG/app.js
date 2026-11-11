@@ -16,7 +16,13 @@ const products=Array.from({length:13},(_,i)=>({slug:"app"+(i+1),name:"APP"+(i+1)
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const displayName=()=>profile?.username||"ROW.GG member";
 const validName=n=>/^[A-Za-z0-9_]{3,20}$/.test(n);
-function toast(s){toastEl.textContent=s;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),2600)}
+function toast(s){toastEl.textContent=s;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),2600)} 
+  
+function go(path) {
+  history.pushState({}, "", path);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 function requireLogin(path) {
   const next = encodeURIComponent(path);
   location.replace(`/log-in?next=${next}`);
