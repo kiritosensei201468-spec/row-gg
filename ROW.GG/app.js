@@ -1,5 +1,15 @@
 (()=>{
-const C=window.ROW_CONFIG||{}, sb=window.supabase&&C.key&&!C.key.includes("PASTE_")?window.supabase.createClient(C.url,C.key):null;
+const C = window.ROW_CONFIG || {};
+
+const sb = window.supabase && C.key && !C.key.includes("PASTE_")
+  ? window.supabase.createClient(C.url, C.key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    })
+  : null;
 const app=document.querySelector("#app"),nav=document.querySelector("#auth-nav"),toastEl=document.querySelector("#toast");
 let user=null,profile=null,channel=null,chatStarted=false,productRatings={};
 const products=Array.from({length:13},(_,i)=>({slug:"app"+(i+1),name:"APP"+(i+1),desc:"ROW.GG application. Product information, plans and availability will be updated soon."}));
@@ -7,7 +17,23 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const displayName=()=>profile?.username||"ROW.GG member";
 const validName=n=>/^[A-Za-z0-9_]{3,20}$/.test(n);
 function toast(s){toastEl.textContent=s;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),2600)}
-function go(p){history.pushState({},"",p);render();scrollTo({top:0,behavior:"smooth"})}
+function requireLogin(path) {
+  const next = encodeURIComponent(path);
+  location.replace(`/log-in?next=${next}`);
+}
+
+function getLoginDestination() {
+  const next = new URLSearchParams(location.search).get("next");
+
+  if (
+    next &&
+    /^\/products(?:\/app(?:[1-9]|1[0-3]))?$/.test(next)
+  ) {
+    return next;
+  }
+
+  return "/products";
+}
 document.addEventListener("click",e=>{const a=e.target.closest("a");if(a&&a.origin===location.origin&&!a.target){e.preventDefault();go(a.pathname)}});
 onpopstate=render;
 async function loadProfile(){
@@ -36,7 +62,7 @@ function home(){
  <div class="hero-copy reveal"><div class="eyebrow"><span class="pulse-dot"></span> A better way to discover</div>
  <h1>Find your next<br><span class="gradient">favorite tool.</span></h1>
  <p class="copy">Explore a curated collection of applications. Discover products, compare details and find what works for you.</p>
- <div class="hero-actions"><a class="btn" href="/log-in">Browse Products <span>↗</span></a><a class="btn ghost" href="/sign-up">Join ROW.GG</a></div>
+ <div class="hero-actions"><a class="btn" href="/products">Browse Products <span>↗</span></a><a class="btn ghost" href="/sign-up">Join ROW.GG</a></div>
  <div class="hero-stats"><div><b>13</b><span>PRODUCTS</span></div><div><b>01</b><span>COMMUNITY</span></div><div><b>∞</b><span>POSSIBILITIES</span></div></div></div>
  <div class="showcase-wrap reveal"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="showcase"><div class="showcase-top"><span class="muted">ROW.GG / PRODUCTS</span><span class="live-pill"><i></i> LIVE COLLECTION</span></div>
  ${[{name:"Medium",image:"images/app1.png"},{name:"Solara",image:"images/app2.png"},{name:"Codex",image:"images/app3.png"},{name:"Delta",image:"images/app4.png"}].map(x=>`<div class="row"><img class="appicon" src="${x.image}" alt="${x.name}"><span><b>${x.name}</b><small>ROW.GG application</small></span><em>Available</em></div>`).join("")}<div class="showcase-bottom"><span>13 products in collection</span><span class="mini-bars"><i></i><i></i><i></i><i></i><i></i></span></div></div><div class="float-chip chip-a">✦ Curated tools</div><div class="float-chip chip-b">★ Community rated</div></div></section>
@@ -125,15 +151,42 @@ function revealElements(){
  const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("is-visible");observer.unobserve(entry.target)}}),{threshold:.08});
  els.forEach(el=>observer.observe(el));
 }
-async function render(){
- const p=location.pathname.replace(/\/+$/,"")||"/";
- if(p==="/")app.innerHTML=home();
- else if(p==="/products")await catalog();
- else if(/^\/products\/app\d+$/.test(p))await detail(p.split("/").pop());
- else if(p==="/log-in")auth(false);
- else if(p==="/sign-up")auth(true);
- else app.innerHTML='<p>Page not found. <a href="/">Home</a></p>';
- navRender();revealElements();
+async function render() {
+  const p = location.pathname.replace(/\/+$/, "") || "/";
+
+  const isProductPage =
+    p === "/products" ||
+    /^\/products\/app(?:[1-9]|1[0-3])$/.test(p);
+
+  // Protect product pages.
+  if (isProductPage && !user) {
+    requireLogin(p);
+    return;
+  }
+
+  // Already logged in? Skip login and signup pages.
+  if (user && (p === "/log-in" || p === "/sign-up")) {
+    location.replace(getLoginDestination());
+    return;
+  }
+
+  if (p === "/") {
+    app.innerHTML = home();
+  } else if (p === "/products") {
+    await catalog();
+  } else if (/^\/products\/app(?:[1-9]|1[0-3])$/.test(p)) {
+    await detail(p.split("/").pop());
+  } else if (p === "/log-in") {
+    auth(false);
+  } else if (p === "/sign-up") {
+    auth(true);
+  } else {
+    app.innerHTML =
+      '<p>Page not found. <a href="/">Home</a></p>';
+  }
+
+  navRender();
+  revealElements();
 }
 function chatMsg(m){
  const own=m.user_id===user?.id;
@@ -192,4 +245,4 @@ document.querySelector("#chat-close").onclick=()=>{document.querySelector("#chat
 document.querySelector("#shade").onclick=document.querySelector("#chat-close").onclick;
 if(sb)sb.auth.onAuthStateChange(async(_e,s)=>{user=s?.user||null;profile=null;if(user)await loadProfile();navRender();chatStarted=false});
 refresh().then(render);
-})()
+})();
