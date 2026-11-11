@@ -202,7 +202,121 @@ function chatMsg(m){
  const mediaHtml=safeMediaUrl?`<div class="chat-media">${media.type==="video"?`<video controls preload="metadata" src="${esc(safeMediaUrl)}"></video>`:`<a href="${esc(safeMediaUrl)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(safeMediaUrl)}" alt="Chat attachment"></a>`}</div>`:"";
  return `<div class="msg ${own?"own":""}"><b>${own?"You":esc(m.display_name||"ROW.GG member")}</b>${body?`<div class="msg-text">${esc(body)}</div>`:""}${mediaHtml}</div>`;
 }
-function addEmoji(emoji){const input=document.querySelector("#chat-input");input.value+=emoji;input.focus()}
+const emojiCategories = {
+  smileys: "😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😍 🥰 😘 😎 🤩 🥳 😭 💀 🤔 😴 😡 🤯 🥺",
+  people: "👋 👍 👎 👏 🙌 🤝 🙏 💪 🫶 👀 🧑‍💻 🕺 💃",
+  animals: "🐶 🐱 🐼 🦊 🐸 🐵 🦁 🐯 🐻 🐨 🐰 🐧 🦋 🐉",
+  food: "🍕 🍔 🍟 🌭 🍿 🍩 🍪 🎂 🍫 🍓 🍉 🍎 🍇 ☕ 🧋",
+  symbols: "❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🔥 ⭐ ✨ 💯 🚀 🎮 🏆"
+};
+
+function addEmoji(emoji) {
+  const input = document.querySelector("#chat-input");
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+
+  input.value =
+    input.value.slice(0, start) +
+    emoji +
+    input.value.slice(end);
+
+  input.focus();
+  input.setSelectionRange(
+    start + emoji.length,
+    start + emoji.length
+  );
+}
+
+function renderEmojis(category = "smileys") {
+  const list = document.querySelector("#emoji-list");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  (emojiCategories[category] || emojiCategories.smileys)
+    .split(" ")
+    .forEach(emoji => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "emoji-option";
+      button.textContent = emoji;
+
+      button.onclick = () => {
+        addEmoji(emoji);
+      };
+
+      list.appendChild(button);
+    });
+}
+
+async function searchGifs(query) {
+  const results = document.querySelector("#gif-results");
+  const apiKey = C.giphyKey;
+
+  if (!results) return;
+
+  if (!apiKey || apiKey.includes("YOUR_GIPHY")) {
+    results.textContent = "Add your GIPHY API key in config.js first.";
+    return;
+  }
+
+  if (!query.trim()) {
+    results.textContent = "Search for a GIF.";
+    return;
+  }
+
+  results.textContent = "Searching GIFs...";
+
+  try {
+    const url = new URL("https://api.giphy.com/v1/gifs/search");
+
+    url.search = new URLSearchParams({
+      api_key: apiKey,
+      q: query,
+      limit: "18",
+      rating: "g",
+      lang: "en"
+    });
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("GIF search failed");
+
+    const data = await response.json();
+    results.innerHTML = "";
+
+    if (!data.data?.length) {
+      results.textContent = "No GIFs found. Try another search.";
+      return;
+    }
+
+    data.data.forEach(gif => {
+      const preview = gif.images?.fixed_width_small?.url;
+      const original = gif.images?.original?.url;
+
+      if (!preview || !original) return;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "gif-result";
+
+      const img = document.createElement("img");
+      img.src = preview;
+      img.alt = "GIF preview";
+      img.loading = "lazy";
+
+      button.appendChild(img);
+
+      button.onclick = async () => {
+        await sendChatMedia(original, "image", "GIF");
+        document.querySelector("#gif-panel").hidden = true;
+      };
+
+      results.appendChild(button);
+    });
+  } catch (error) {
+    results.textContent = "Could not load GIFs. Please try again.";
+  }
+}
 async function sendChatMedia(url,type,caption){
  if(!sb||!user)return;
  const {error}=await sb.from("chat_messages").insert({user_id:user.id,message:"[ROWMEDIA]"+JSON.stringify({url,type,caption})});
@@ -240,9 +354,36 @@ async function openChat(){
   if(error)toast(error.message);else input.value="";
   send.disabled=false;input.focus();
  };
- document.querySelector("#emoji-toggle").onclick=()=>{const panel=document.querySelector("#emoji-panel");panel.hidden=!panel.hidden};
- document.querySelectorAll("#emoji-panel button").forEach(b=>b.onclick=()=>addEmoji(b.textContent));
- document.querySelector("#gif-toggle").onclick=async()=>{const url=prompt("Paste a direct GIF image URL (https://…):");if(!url)return;if(!/^https:\/\//i.test(url)){toast("Please use a secure https GIF URL.");return}await sendChatMedia(url,"image","")};
+const emojiPanel = document.querySelector("#emoji-panel");
+const gifPanel = document.querySelector("#gif-panel");
+
+renderEmojis();
+
+document.querySelector("#emoji-toggle").onclick = () => {
+  emojiPanel.hidden = !emojiPanel.hidden;
+  gifPanel.hidden = true;
+};
+
+document.querySelectorAll("[data-category]").forEach(button => {
+  button.onclick = () => renderEmojis(button.dataset.category);
+});
+
+document.querySelector("#gif-toggle").onclick = () => {
+  gifPanel.hidden = !gifPanel.hidden;
+  emojiPanel.hidden = true;
+};
+
+let gifSearchTimer;
+
+document.querySelector("#gif-search").oninput = event => {
+  clearTimeout(gifSearchTimer);
+
+  const query = event.target.value.trim();
+
+  gifSearchTimer = setTimeout(() => {
+    searchGifs(query);
+  }, 450);
+};
  document.querySelector("#chat-file").onchange=async e=>{const file=e.target.files?.[0];e.target.value="";if(!file)return;if(!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm|quicktime))$/.test(file.type)){toast("Choose a JPG, PNG, WEBP, GIF, MP4 or WEBM file.");return}if(file.size>25*1024*1024){toast("Files must be 25 MB or smaller.");return}await uploadChatFile(file)};
 
 }
