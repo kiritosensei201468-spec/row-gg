@@ -12,7 +12,88 @@ const sb = window.supabase && C.key && !C.key.includes("PASTE_")
   : null;
 const app=document.querySelector("#app"),nav=document.querySelector("#auth-nav"),toastEl=document.querySelector("#toast");
 let user=null,profile=null,channel=null,chatStarted=false,productRatings={};
-const products=Array.from({length:13},(_,i)=>({slug:"app"+(i+1),name:"APP"+(i+1),desc:"ROW.GG application. Product information, plans and availability will be updated soon."}));
+
+const products = [
+  {
+    slug: "app1",
+    name: "Madium",
+    desc: "Create and develop Roblox experiences.",
+    image: "images/app1.png"
+  },
+  {
+    slug: "app2",
+    name: "Solara",
+    desc: "Resources and tools for Roblox creators.",
+    image: "images/app2.png"
+  },
+  {
+    slug: "app3",
+    name: "Codex",
+    desc: "Third-party Roblox browser extension.",
+    image: "images/app3.png"
+  },
+  {
+    slug: "app4",
+    name: "Delta",
+    desc: "Third-party Roblox website enhancement extension.",
+    image: "images/app4.png"
+  },
+  {
+    slug: "app5",
+    name: "Xeno",
+    desc: "3D modeling and animation software.",
+    image: "images/app5.png"
+  },
+  {
+    slug: "app6",
+    name: "JJSploit",
+    desc: "Digital painting and illustration software.",
+    image: "images/app6.png"
+  },
+  {
+    slug: "app7",
+    name: "Fluxus",
+    desc: "Screen recording and live streaming software.",
+    image: "images/app7.png"
+  },
+  {
+    slug: "app8",
+    name: "Argon",
+    desc: "Code editor for development.",
+    image: "images/app8.png"
+  },
+  {
+    slug: "app9",
+    name: "Pluto",
+    desc: "Manage GitHub projects visually.",
+    image: "images/app9.png"
+  },
+  {
+    slug: "app10",
+    name: "Velocity",
+    desc: "Manage Roblox games and creator projects.",
+    image: "images/app10.png"
+  },
+  {
+    slug: "app11",
+    name: "Real",
+    desc: "Audio recording and editing software.",
+    image: "images/app11.png"
+  },
+  {
+    slug: "app12",
+    name: "Lucid",
+    desc: "Image editing software.",
+    image: "images/app12.png"
+  },
+  {
+    slug: "app13",
+    name: "Madius External",
+    desc: "Screenshot and screen capture utility.",
+    image: "images/app13.png"
+  }
+];
+
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const displayName=()=>profile?.username||"ROW.GG member";
 const validName=n=>/^[A-Za-z0-9_]{3,20}$/.test(n);
