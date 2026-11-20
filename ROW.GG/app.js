@@ -159,7 +159,11 @@ function home(){
 }
 function card(p){
  const r=productRatings[p.slug],rating=r?.avg?Number(r.avg).toFixed(1):"—",count=r?.count||0;
- return `<article class="card reveal" data-name="${p.name.toLowerCase()}"><a href="/products/${p.slug}"><div class="art"><span>${p.name}</span><i>↗</i></div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="/products/${p.slug}">Details ↗</a></div></article>`;
+ return `<article class="card reveal" data-name="${p.name.toLowerCase()}"><a href="/products/${p.slug}"><div class="art">
+  <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">
+  <span>${esc(p.name)}</span>
+  <i>↗</i>
+</div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="/products/${p.slug}">Details ↗</a></div></article>`;
 }
 async function loadRatings(){
  productRatings={};
