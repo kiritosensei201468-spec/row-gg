@@ -55,11 +55,69 @@ async function loadProfile(){
  const {data,error}=await sb.from("profiles").select("id,username").eq("id",user.id).maybeSingle();
  if(!error)profile=data;
 }
+  function showLogoutModal() {
+  if (document.querySelector("#logout-modal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "logout-modal";
+  modal.innerHTML = `
+    <div class="logout-dialog" role="dialog" aria-modal="true"
+         aria-labelledby="logout-title">
+      <h2 id="logout-title">Log Out</h2>
+      <div class="logout-divider"></div>
+      <p>Are you sure you want to log out?</p>
+      <div class="logout-actions">
+        <button type="button" class="logout-cancel">Cancel</button>
+        <button type="button" class="logout-confirm">Log Out</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const close = () => modal.remove();
+
+  modal.querySelector(".logout-cancel").onclick = close;
+
+  modal.addEventListener("click", e => {
+    if (e.target === modal) close();
+  });
+
+  modal.querySelector(".logout-confirm").onclick = async () => {
+    const button = modal.querySelector(".logout-confirm");
+    button.disabled = true;
+    button.textContent = "Logging out…";
+
+    if (sb) {
+      const { error } = await sb.auth.signOut();
+
+      if (error) {
+        button.disabled = false;
+        button.textContent = "Log Out";
+        toast(error.message);
+        return;
+      }
+    }
+
+    user = null;
+    profile = null;
+    chatStarted = false;
+
+    if (channel && sb) await sb.removeChannel(channel);
+
+    channel = null;
+    close();
+    navRender();
+    go("/");
+  };
+
+  modal.querySelector(".logout-cancel").focus();
+}
 function navRender(){
  if(!user){nav.innerHTML='<a class="nav-login" href="/log-in">Log in</a>';return}
  nav.innerHTML=`<div class="account-wrap"><button id="userbtn" class="account-btn"><span class="avatar">${esc(displayName().slice(0,1).toUpperCase())}</span>${esc(displayName())}</button><a class="vip-nav" href="/purchase/Vip">VIP</a><div id="usermenu" class="account-menu" hidden><div class="account-label">SIGNED IN AS</div><b>${esc(displayName())}</b><button id="logout">Log out ↗</button></div></div>`;
  document.querySelector("#userbtn").onclick=()=>{const m=document.querySelector("#usermenu");m.hidden=!m.hidden};
- document.querySelector("#logout").onclick=async()=>{if(!window.confirm("Are you sure you want to log out?"))return;if(sb)await sb.auth.signOut();user=null;profile=null;chatStarted=false;if(channel&&sb)await sb.removeChannel(channel);channel=null;navRender();go("/")};
+ document.querySelector("#logout").onclick = showLogoutModal;
 }
 async function refresh(){
  if(sb){const {data:{session}}=await sb.auth.getSession();user=session?.user||null;await loadProfile()}
