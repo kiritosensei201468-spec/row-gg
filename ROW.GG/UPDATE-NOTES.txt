@@ -1,0 +1,18 @@
+ROW.GG update package
+
+Included:
+- Replaced misleading catalog entries with 8 legitimate applications.
+- Added publisher website links on product detail pages.
+- Changed product URLs to readable slugs.
+- Added VIP navigation link to /purchase/Vip (payment is not implemented).
+- Added a logout confirmation prompt.
+- Preserved existing Supabase configuration and core project files.
+- Added monochrome SVG placeholders for the new catalog entries.
+- Added a focus-state radius override for the search field.
+
+Important:
+- VIP status/badges are intentionally not granted by client-side code. A real VIP badge
+  must be based on a server-verified subscription status.
+- Payment and checkout remain untouched, as requested.
+- The package does not include an active VIP purchase page or payment backend.
+- Supabase schema, RLS, and Vercel deployment should be tested before publishing.
