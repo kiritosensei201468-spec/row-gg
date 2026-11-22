@@ -514,3 +514,37 @@ nav button:hover,nav a:hover{border-color:#ffffff80;background:#222}
 .vip-nav:hover{background:#242424;border-color:#888;color:#fff}
 .searchbox,.searchbox:focus-within{border-radius:14px!important}
 .searchbox input,.searchbox input:focus{border-radius:inherit!important;outline:none}
+
+/* Fix username + VIP horizontal alignment */
+.account-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: max-content;
+}
+
+.account-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.vip-nav {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+/* Keep the account dropdown below the username */
+.account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 100;
+}
