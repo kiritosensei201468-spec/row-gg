@@ -228,7 +228,51 @@ function revealElements(){
  const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("is-visible");observer.unobserve(entry.target)}}),{threshold:.08});
  els.forEach(el=>observer.observe(el));
 }
-async function render() {
+function vipPurchasePage() {
+  return `
+    <section class="vip-page">
+      <div class="vip-card">
+        <div class="vip-label">ROW.GG EXCLUSIVE</div>
+        <div class="vip-icon">♛</div>
+        <h1>VIP <span>MEMBERSHIP</span></h1>
+        <p class="vip-description">
+          Upgrade your ROW.GG experience with exclusive VIP status.
+        </p>
+        <div class="vip-benefits">
+          <div>✦ Exclusive VIP badge</div>
+          <div>✦ Special recognition in chat</div>
+          <div>✦ VIP member status</div>
+          <div>✦ Support the ROW.GG community</div>
+        </div>
+        <div class="vip-price">
+          <span>VIP ACCESS</span>
+          <strong>Coming Soon</strong>
+        </div>
+        <button class="vip-buy-button" id="vip-buy">
+          Buy Now <span>↗</span>
+        </button>
+        <div class="vip-footer">Secure payment will be available soon.</div>
+      </div>
+    </section>
+  `;
+}
+
+function showPaymentNotice() {
+  document.querySelector("#payment-notice")?.remove();
+
+  const notice = document.createElement("div");
+  notice.id = "payment-notice";
+  notice.textContent = "Payment are currently not available";
+  document.body.appendChild(notice);
+
+  requestAnimationFrame(() => notice.classList.add("show"));
+
+  setTimeout(() => {
+    notice.classList.remove("show");
+    setTimeout(() => notice.remove(), 300);
+  }, 3000);
+}
+  async function render() {
   const p = location.pathname.replace(/\/+$/, "") || "/";
 
   const isProductPage =
@@ -257,6 +301,9 @@ async function render() {
     auth(false);
   } else if (p === "/sign-up") {
     auth(true);
+  } else if (p.toLowerCase() === "/purchase/vip") {
+    app.innerHTML = vipPurchasePage();
+    document.querySelector("#vip-buy").onclick = showPaymentNotice;
   } else {
     app.innerHTML =
       '<p>Page not found. <a href="/">Home</a></p>';
