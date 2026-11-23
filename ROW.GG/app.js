@@ -522,3 +522,42 @@ document.querySelector("#shade").onclick=document.querySelector("#chat-close").o
 if(sb)sb.auth.onAuthStateChange(async(_e,s)=>{user=s?.user||null;profile=null;if(user)await loadProfile();navRender();chatStarted=false});
 refresh().then(render);
 })();
+
+
+// ROW.GG cursor glow — lightweight, mouse-only and accessibility-aware.
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const cursorGlow = document.createElement("div");
+  cursorGlow.className = "cursor-glow";
+  cursorGlow.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cursorGlow);
+
+  let glowX = -300, glowY = -300, targetX = -300, targetY = -300;
+  let glowFrame = 0;
+
+  const moveGlow = () => {
+    glowX += (targetX - glowX) * 0.18;
+    glowY += (targetY - glowY) * 0.18;
+    cursorGlow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
+    if (Math.abs(targetX - glowX) > 0.2 || Math.abs(targetY - glowY) > 0.2) {
+      glowFrame = requestAnimationFrame(moveGlow);
+    } else {
+      glowFrame = 0;
+    }
+  };
+
+  window.addEventListener("pointermove", event => {
+    if (event.pointerType === "touch") return;
+    targetX = event.clientX;
+    targetY = event.clientY;
+    cursorGlow.classList.add("is-visible");
+    if (!glowFrame) glowFrame = requestAnimationFrame(moveGlow);
+  }, { passive: true });
+
+  document.documentElement.addEventListener("pointerleave", () => {
+    cursorGlow.classList.remove("is-visible");
+  });
+  document.documentElement.addEventListener("pointerenter", () => {
+    cursorGlow.classList.add("is-visible");
+  });
+}
