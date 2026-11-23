@@ -893,3 +893,26 @@ select {
     transform: none !important;
   }
 }
+
+
+/* ROW.GG soft purple cursor-following glow */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(151, 92, 255, 0.22) 0%, rgba(125, 76, 230, 0.12) 32%, rgba(125, 76, 230, 0.045) 55%, transparent 72%);
+  filter: blur(10px);
+  will-change: transform, opacity;
+  transition: opacity 180ms ease;
+}
+.cursor-glow.is-visible { opacity: 1; }
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .cursor-glow { display: none !important; }
+}
