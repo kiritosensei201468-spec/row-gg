@@ -516,6 +516,27 @@ document.querySelector("#gif-search").oninput = event => {
  document.querySelector("#chat-file").onchange=async e=>{const file=e.target.files?.[0];e.target.value="";if(!file)return;if(!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm|quicktime))$/.test(file.type)){toast("Choose a JPG, PNG, WEBP, GIF, MP4 or WEBM file.");return}if(file.size>25*1024*1024){toast("Files must be 25 MB or smaller.");return}await uploadChatFile(file)};
 
 }
+const siteMenuToggle = document.querySelector("#site-menu-toggle");
+const siteMenu = document.querySelector("#site-menu");
+const closeSiteMenu = () => {
+  siteMenu.hidden = true;
+  siteMenuToggle.setAttribute("aria-expanded", "false");
+};
+siteMenuToggle.onclick = () => {
+  const opening = siteMenu.hidden;
+  siteMenu.hidden = !opening;
+  siteMenuToggle.setAttribute("aria-expanded", String(opening));
+};
+document.querySelector("#site-menu-logout").onclick = () => {
+  closeSiteMenu();
+  showLogoutModal();
+};
+document.addEventListener("click", event => {
+  if (!event.target.closest(".site-menu-wrap")) closeSiteMenu();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeSiteMenu();
+});
 document.querySelector("#chat-open").onclick=openChat;
 document.querySelector("#chat-close").onclick=()=>{document.querySelector("#chat").classList.remove("open");document.querySelector("#shade").classList.remove("open")};
 document.querySelector("#shade").onclick=document.querySelector("#chat-close").onclick;
