@@ -793,3 +793,103 @@ nav button:hover,nav a:hover{border-color:#ffffff80;background:#222}
     font-size: 25px;
   }
 }
+
+
+/* ROW.GG performance, accessibility and responsive polish */
+img {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid #b9a8ff;
+  outline-offset: 3px;
+}
+
+@media (hover: none) {
+  .card:hover,
+  .feature-card:hover,
+  .btn:hover,
+  nav button:hover,
+  nav a:hover {
+    transform: none;
+  }
+
+  .card:hover {
+    box-shadow: 0 12px 35px #0002;
+  }
+}
+
+@media (max-width: 520px) {
+  header {
+    min-height: 64px;
+    height: auto;
+    padding: 10px 4%;
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 16px;
+    gap: 6px;
+  }
+
+  nav {
+    gap: 7px;
+  }
+
+  nav button,
+  nav a {
+    padding: 9px 10px;
+  }
+
+  .hero {
+    min-height: 0;
+    padding: 48px 0 35px;
+  }
+
+  .showcase-wrap {
+    min-height: 320px;
+    overflow: hidden;
+  }
+
+  .orbit-two {
+    width: 390px;
+  }
+
+  .float-chip {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+    margin-bottom: 45px;
+  }
+
+  .site-footer {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
