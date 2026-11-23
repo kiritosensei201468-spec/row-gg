@@ -11,7 +11,7 @@ const sb = window.supabase && C.key && !C.key.includes("PASTE_")
     })
   : null;
 const app=document.querySelector("#app"),nav=document.querySelector("#auth-nav"),toastEl=document.querySelector("#toast");
-let user=null,profile=null,channel=null,chatStarted=false,productRatings={};
+let user=null,profile=null,channel=null,chatStarted=false,productRatings={},revealObserver=null;
 
 const products = [
   { slug:"roblox-studio", name:"Roblox Studio", desc:"Create, build and publish Roblox experiences.", image:"images/roblox-studio.svg", url:"https://create.roblox.com/" },
@@ -225,8 +225,19 @@ function auth(signup){
 function revealElements(){
  const els=document.querySelectorAll(".reveal:not(.is-visible)");
  if(!("IntersectionObserver"in window)){els.forEach(x=>x.classList.add("is-visible"));return}
- const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("is-visible");observer.unobserve(entry.target)}}),{threshold:.08});
- els.forEach(el=>observer.observe(el));
+ if(!revealObserver){
+  revealObserver=new IntersectionObserver(entries=>{
+   entries.forEach(entry=>{
+    if(entry.isIntersecting){
+     entry.target.classList.add("is-visible");
+     revealObserver.unobserve(entry.target);
+    }
+   });
+  },{threshold:.08,rootMargin:"0px 0px 80px 0px"});
+ }else{
+  revealObserver.disconnect();
+ }
+ els.forEach(el=>revealObserver.observe(el));
 }
 function vipPurchasePage() {
   return `
