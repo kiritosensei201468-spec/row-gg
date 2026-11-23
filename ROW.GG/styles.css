@@ -655,3 +655,141 @@ nav button:hover,nav a:hover{border-color:#ffffff80;background:#222}
     font-size: 13px;
   }
 }
+
+/* ROW.GG VIP PURCHASE PAGE */
+.vip-page {
+  min-height: 75vh;
+  display: grid;
+  place-items: center;
+  padding: 55px 20px;
+}
+
+.vip-card {
+  width: min(100%, 440px);
+  padding: 35px;
+  text-align: center;
+  border: 1px solid #30313a;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #171820, #0d0e13);
+  box-shadow: 0 25px 80px #0008;
+}
+
+.vip-label {
+  color: #aaa;
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+.vip-icon {
+  margin: 25px auto 15px;
+  font-size: 48px;
+  color: #ddd;
+}
+
+.vip-card h1 {
+  margin: 0;
+  color: white;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.vip-card h1 span {
+  color: #999;
+}
+
+.vip-description {
+  margin: 14px 0 28px;
+  color: #999ba7;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.vip-benefits {
+  display: grid;
+  gap: 13px;
+  padding: 20px;
+  text-align: left;
+  border-radius: 13px;
+  background: #ffffff08;
+  color: #d5d5dc;
+  font-size: 14px;
+}
+
+.vip-price {
+  display: grid;
+  gap: 8px;
+  margin: 25px 0;
+}
+
+.vip-price span {
+  color: #858794;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.vip-price strong {
+  color: white;
+  font-size: 23px;
+}
+
+.vip-buy-button {
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  border-radius: 11px;
+  background: #eee;
+  color: #111;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.vip-buy-button:hover {
+  background: white;
+  transform: translateY(-2px);
+}
+
+.vip-footer {
+  margin-top: 17px;
+  color: #777985;
+  font-size: 11px;
+}
+
+/* Bottom payment notification */
+#payment-notice {
+  position: fixed;
+  z-index: 99999;
+  bottom: 25px;
+  left: 50%;
+  transform: translate(-50%, 25px);
+  opacity: 0;
+  width: max-content;
+  max-width: calc(100% - 30px);
+  padding: 14px 20px;
+  border: 1px solid #393b46;
+  border-radius: 12px;
+  background: #191b25;
+  color: #eee;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 12px 40px #0009;
+  transition: .3s ease;
+}
+
+#payment-notice.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media(max-width: 480px) {
+  .vip-card {
+    padding: 25px 20px;
+  }
+
+  .vip-card h1 {
+    font-size: 25px;
+  }
+}
