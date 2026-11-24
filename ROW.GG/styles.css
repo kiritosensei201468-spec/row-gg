@@ -1008,3 +1008,39 @@ select {
   .site-menu-toggle { width: 37px; height: 37px; }
   .site-menu { width: 190px; }
 }
+
+/* Center navigation and Games dropdown */
+.brand-group{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.top-center-nav{display:flex;align-items:center;justify-content:center;gap:8px;flex:1}
+.top-nav-link{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border:1px solid transparent;border-radius:10px;background:transparent;color:#ededed;font-size:13px;font-weight:600;cursor:pointer;transition:background .22s,border-color .22s,transform .22s}
+.top-nav-link:hover,.top-nav-link:focus-visible{background:#1b1b1b;border-color:#ffffff2a;transform:translateY(-1px);outline:none}
+.games-nav-wrap{position:relative}
+.games-chevron{font-size:15px;transition:transform .22s}
+.games-nav-toggle[aria-expanded="true"] .games-chevron{transform:rotate(180deg)}
+.games-nav-menu{position:absolute;top:calc(100% + 12px);left:50%;min-width:165px;padding:7px;display:grid;gap:4px;background:#111;border:1px solid #ffffff24;border-radius:13px;box-shadow:0 18px 45px #000b;transform:translate(-50%,0);animation:gamesMenuIn .2s ease both;z-index:12}
+.games-nav-menu[hidden]{display:none}
+.games-nav-menu a{padding:11px 12px;border-radius:8px;color:#eee;font-size:12px;transition:background .18s,transform .18s}
+.games-nav-menu a:hover{background:#252525;transform:translateX(3px)}
+@keyframes gamesMenuIn{from{opacity:0;transform:translate(-50%,-7px)}to{opacity:1;transform:translate(-50%,0)}}
+header>nav{flex:1;justify-content:flex-end}
+.game-empty-state{margin-top:28px;padding:28px;border:1px dashed #ffffff35;border-radius:14px;background:#111;color:#cfcfcf;text-align:center;font-size:15px}
+.faq-page{max-width:850px;margin-left:auto;margin-right:auto}
+.faq-item{margin:18px 0;padding:20px 22px;border:1px solid #ffffff20;border-radius:14px;background:linear-gradient(145deg,#171717,#0d0d0d)}
+.faq-item h2{font:600 18px "Space Grotesk";margin:0 0 8px}
+.faq-item p{margin:0;font-size:13px}
+@media(max-width:760px){
+ header{padding:0 14px;gap:6px}
+ .brand-group{flex:0 0 auto;gap:9px}
+ .top-center-nav{gap:1px}
+ .top-nav-link{padding:9px 8px;font-size:11px}
+ header>nav{flex:0 0 auto;gap:6px}
+ header>nav button,header>nav a{padding:9px 10px}
+}
+@media(max-width:520px){
+ header{height:auto;min-height:66px;flex-wrap:wrap;padding:10px 13px;row-gap:5px}
+ .brand-group{flex:1 1 40%}
+ .top-center-nav{order:3;flex:1 0 100%;justify-content:center;border-top:1px solid #ffffff16;padding-top:5px}
+ header>nav{flex:0 0 auto}
+ .top-nav-link{padding:8px 13px;font-size:12px}
+ .games-nav-menu{top:calc(100% + 7px)}
+}
