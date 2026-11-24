@@ -148,7 +148,7 @@ function card(p,base=currentCatalogBase){
   <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">
   <span>${esc(p.name)}</span>
   <i>↗</i>
-</div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="/products/${p.slug}">Details ↗</a></div></article>`;
+</div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="${base}/${p.slug}">Details ↗</a></div></article>`;
 }
 async function loadRatings(){
  productRatings={};
@@ -289,7 +289,7 @@ async function render() {
   const lower = p.toLowerCase();
   const rootCatalog = lower === "/products" || lower.startsWith("/products/");
   const robloxCatalog = lower === "/roblox/products" || lower.startsWith("/roblox/products/");
-  const detailPage = (rootCatalog || robloxCatalog) && p.split("/").length >= 4;
+  const detailPage = lower.startsWith("/products/") || lower.startsWith("/roblox/products/");
 
   if ((rootCatalog || robloxCatalog) && !user) {
     requireLogin(p);
@@ -519,6 +519,24 @@ document.querySelector("#gif-search").oninput = event => {
  document.querySelector("#chat-file").onchange=async e=>{const file=e.target.files?.[0];e.target.value="";if(!file)return;if(!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm|quicktime))$/.test(file.type)){toast("Choose a JPG, PNG, WEBP, GIF, MP4 or WEBM file.");return}if(file.size>25*1024*1024){toast("Files must be 25 MB or smaller.");return}await uploadChatFile(file)};
 
 }
+const gamesNavToggle = document.querySelector("#games-nav-toggle");
+const gamesNavMenu = document.querySelector("#games-nav-menu");
+const closeGamesMenu = () => {
+  if (!gamesNavToggle || !gamesNavMenu) return;
+  gamesNavMenu.hidden = true;
+  gamesNavToggle.setAttribute("aria-expanded", "false");
+};
+gamesNavToggle.onclick = () => {
+  const opening = gamesNavMenu.hidden;
+  gamesNavMenu.hidden = !opening;
+  gamesNavToggle.setAttribute("aria-expanded", String(opening));
+};
+document.addEventListener("click", event => {
+  if (!event.target.closest(".games-nav-wrap")) closeGamesMenu();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeGamesMenu();
+});
 const siteMenuToggle = document.querySelector("#site-menu-toggle");
 const siteMenu = document.querySelector("#site-menu");
 const closeSiteMenu = () => {
