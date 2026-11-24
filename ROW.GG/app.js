@@ -11,7 +11,7 @@ const sb = window.supabase && C.key && !C.key.includes("PASTE_")
     })
   : null;
 const app=document.querySelector("#app"),nav=document.querySelector("#auth-nav"),toastEl=document.querySelector("#toast");
-let user=null,profile=null,channel=null,chatStarted=false,productRatings={},revealObserver=null;
+let user=null,profile=null,channel=null,chatStarted=false,productRatings={},revealObserver=null,currentCatalogBase="/products";
 
 const products = [
   { slug:"roblox-studio", name:"Roblox Studio", desc:"Create, build and publish Roblox experiences.", image:"images/roblox-studio.svg", url:"https://create.roblox.com/" },
@@ -42,7 +42,7 @@ function requireLogin(path) {
 function getLoginDestination() {
   const next = new URLSearchParams(location.search).get("next");
 
-  if (next && /^\/products(?:\/[a-z0-9-]+)?$/.test(next)) {
+  if (next && /^(?:\/products|\/Roblox\/products)(?:\/[a-z0-9-]+)?$/i.test(next)) {
     return next;
   }
 
@@ -142,9 +142,9 @@ function home(){
  <section class="feature-grid"><article class="feature-card reveal"><div class="feature-icon">⌕</div><h3>Find faster</h3><p>Search the collection and get straight to the tools you're looking for.</p></article><article class="feature-card reveal"><div class="feature-icon">★</div><h3>Community reviews</h3><p>See ratings and feedback shared by the ROW.GG community.</p></article><article class="feature-card reveal"><div class="feature-icon">◉</div><h3>Stay connected</h3><p>Join the general chat and connect with other members.</p></article></section>
  <footer class="site-footer"><span>© ROW.GG</span><span><a href="#" target="_blank" rel="noopener">YouTube — add link</a>　<a href="https://discord.gg/tEZUkXa97" target="_blank" rel="noopener">Discord ↗</a></span></footer>`;
 }
-function card(p){
+function card(p,base=currentCatalogBase){
  const r=productRatings[p.slug],rating=r?.avg?Number(r.avg).toFixed(1):"—",count=r?.count||0;
- return `<article class="card reveal" data-name="${p.name.toLowerCase()}"><a href="/products/${p.slug}"><div class="art">
+ return `<article class="card reveal" data-name="${p.name.toLowerCase()}"><a href="${base}/${p.slug}"><div class="art">
   <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">
   <span>${esc(p.name)}</span>
   <i>↗</i>
@@ -159,13 +159,14 @@ async function loadRatings(){
  (data||[]).forEach(r=>{(grouped[r.app_slug]??=[]).push(Number(r.rating)||0)});
  Object.entries(grouped).forEach(([slug,vals])=>productRatings[slug]={avg:vals.reduce((a,b)=>a+b,0)/vals.length,count:vals.length});
 }
-async function catalog(){
- app.innerHTML=`<section class="catalog reveal"><div class="eyebrow">The collection</div><h1>Explore <span class="gradient">products.</span></h1><p>Search the ROW.GG application collection or sort by community rating.</p><div class="tools"><label class="searchbox"><span>⌕</span><input id="search" placeholder="Search products…" autocomplete="off"></label><select id="sort"><option value="default">Default sorting</option><option value="high">Highest rated</option><option value="low">Lowest rated</option></select></div><div class="result-count" id="result-count">8 applications</div></section><section class="grid" id="grid"><div class="loading-line">Loading collection…</div></section>`;
+async function catalog(base="/products",items=products,title="Explore products.",description="Search the ROW.GG application collection or sort by community rating."){
+ currentCatalogBase=base;
+ app.innerHTML=`<section class="catalog reveal"><div class="eyebrow">The collection</div><h1>${title}</h1><p>${description}</p><div class="tools"><label class="searchbox"><span>⌕</span><input id="search" placeholder="Search products…" autocomplete="off"></label><select id="sort"><option value="default">Default sorting</option><option value="high">Highest rated</option><option value="low">Lowest rated</option></select></div><div class="result-count" id="result-count">${items.length} applications</div></section><section class="grid" id="grid"><div class="loading-line">Loading collection…</div></section>`;
  await loadRatings();
  const search=document.querySelector("#search"),sort=document.querySelector("#sort"),grid=document.querySelector("#grid"),count=document.querySelector("#result-count");
  const update=()=>{
   const q=search.value.trim().toLowerCase();
-  let list=products.filter(x=>(x.name+" "+x.desc).toLowerCase().includes(q));
+  let list=items.filter(x=>(x.name+" "+x.desc).toLowerCase().includes(q));
   if(sort.value!=="default")list.sort((a,b)=>{
    const av=productRatings[a.slug]?.avg,bv=productRatings[b.slug]?.avg;
    if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
@@ -177,7 +178,7 @@ async function catalog(){
  };
  search.oninput=update;sort.onchange=update;update();
 }
-async function detail(slug){
+async function detail(slug,base="/products"){
  const p=products.find(x=>x.slug===slug);
  if(!p){app.innerHTML='<p>Product not found. <a href="/products">Back to products</a></p>';return}
  app.innerHTML='<div class="loading-line">Loading product details…</div>';
@@ -195,7 +196,7 @@ async function detail(slug){
   const button=e.currentTarget.querySelector("button");button.disabled=true;button.textContent="Saving…";
   const {error}=await sb.from("app_reviews").upsert({user_id:user.id,app_slug:slug,rating:+document.querySelector("#rating").value,review_text:document.querySelector("#reviewtext").value.trim()},{onConflict:"user_id,app_slug"});
   if(error){toast(error.message);button.disabled=false;button.textContent="Post review ↗";return}
-  toast("Review saved");detail(slug);
+  toast("Review saved");detail(slug,base);
  };
  revealElements();
 }
@@ -283,41 +284,43 @@ function showPaymentNotice() {
     setTimeout(() => notice.remove(), 300);
   }, 3000);
 }
-  async function render() {
+async function render() {
   const p = location.pathname.replace(/\/+$/, "") || "/";
+  const lower = p.toLowerCase();
+  const rootCatalog = lower === "/products" || lower.startsWith("/products/");
+  const robloxCatalog = lower === "/roblox/products" || lower.startsWith("/roblox/products/");
+  const detailPage = (rootCatalog || robloxCatalog) && p.split("/").length >= 4;
 
-  const isProductPage =
-    p === "/products" ||
-    products.some(x => p === "/products/" + x.slug);
-
-  // Protect product pages.
-  if (isProductPage && !user) {
+  if ((rootCatalog || robloxCatalog) && !user) {
     requireLogin(p);
     return;
   }
-
-  // Already logged in? Skip login and signup pages.
-  if (user && (p === "/log-in" || p === "/sign-up")) {
+  if (user && (lower === "/log-in" || lower === "/sign-up")) {
     location.replace(getLoginDestination());
     return;
   }
 
   if (p === "/") {
     app.innerHTML = home();
-  } else if (p === "/products") {
-    await catalog();
-  } else if (p.startsWith("/products/")) {
-    await detail(p.split("/").pop());
-  } else if (p === "/log-in") {
+  } else if (lower === "/products") {
+    await catalog("/products", products, "Explore <span class='gradient'>all apps.</span>", "Browse every application available across ROW.GG games.");
+  } else if (lower === "/roblox/products") {
+    await catalog("/Roblox/products", products, "Roblox <span class='gradient'>applications.</span>", "Explore applications for the Roblox community.");
+  } else if (lower === "/free-fire/products") {
+    app.innerHTML = '<section class="catalog empty-catalog"><div class="eyebrow">Free Fire collection</div><h1>Free Fire <span class="gradient">applications.</span></h1><div class="game-empty-state">Sorry, there are no applications available.</div></section>';
+  } else if (detailPage) {
+    await detail(p.split("/").pop(), robloxCatalog ? "/Roblox/products" : "/products");
+  } else if (lower === "/faq") {
+    app.innerHTML = '<section class="catalog faq-page"><div class="eyebrow">Help center</div><h1>Frequently asked <span class="gradient">questions.</span></h1><article class="faq-item"><h2>What is ROW.GG?</h2><p>ROW.GG is a community website for discovering applications, reading reviews and chatting with other members.</p></article><article class="faq-item"><h2>How do I browse applications?</h2><p>Open Products to see the combined collection, or use Games to browse a specific game category.</p></article><article class="faq-item"><h2>Do I need an account?</h2><p>Sign in to access product pages, post reviews and use community features.</p></article><article class="faq-item"><h2>Why does Free Fire have no applications yet?</h2><p>The Free Fire collection is not available yet. Check back later for updates.</p></article></section>';
+  } else if (lower === "/log-in") {
     auth(false);
-  } else if (p === "/sign-up") {
+  } else if (lower === "/sign-up") {
     auth(true);
-  } else if (p.toLowerCase() === "/purchase/vip") {
+  } else if (lower === "/purchase/vip") {
     app.innerHTML = vipPurchasePage();
     document.querySelector("#vip-buy").onclick = showPaymentNotice;
   } else {
-    app.innerHTML =
-      '<p>Page not found. <a href="/">Home</a></p>';
+    app.innerHTML = '<p>Page not found. <a href="/">Home</a></p>';
   }
 
   navRender();
