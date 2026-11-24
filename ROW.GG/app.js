@@ -173,7 +173,7 @@ async function catalog(base="/products",items=products,title="Explore products."
    return sort.value==="high"?bv-av:av-bv;
   });
   count.textContent=`${list.length} application${list.length===1?"":"s"} found`;
-  grid.innerHTML=list.length?list.map(card).join(""):'<div class="empty-state">No matching products. Try another search.</div>';
+  grid.innerHTML=list.length?list.map(x=>card(x,base)).join(""):'<div class="empty-state">No matching products. Try another search.</div>';
   revealElements();
  };
  search.oninput=update;sort.onchange=update;update();
