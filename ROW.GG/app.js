@@ -148,7 +148,7 @@ function card(p,base=currentCatalogBase){
   <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">
   <span>${esc(p.name)}</span>
   <i>↗</i>
-</div></a><div class="card-meta"><span>APPLICATION</span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="${base}/${p.slug}">Details ↗</a></div></article>`;
+</div></a><div class="card-meta"><span class="card-app-identity"><span class="card-logo-slot"><span class="logo-monogram">${esc(p.name.slice(0,2).toUpperCase())}</span><img src="${esc(p.image)}" alt="${esc(p.name)} logo" loading="lazy" onerror="this.hidden=true"></span><span>APPLICATION</span></span><span class="available"><i></i> Available</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="cardfoot"><span>★ ${rating} <small>(${count})</small></span><a href="${base}/${p.slug}">Details ↗</a></div></article>`;
 }
 async function loadRatings(){
  productRatings={};
@@ -187,9 +187,9 @@ async function detail(slug,base="/products"){
  const names=await getNames(reviews.map(r=>r.user_id));
  const avg=reviews.length?(reviews.reduce((a,r)=>a+(Number(r.rating)||0),0)/reviews.length).toFixed(1):"—";
  app.innerHTML=`<section class="detail"><div class="detailart reveal">
-  <img src="${esc(p.image)}" alt="${esc(p.name)}">
+  <div class="detail-logo-box"><span class="logo-monogram">${esc(p.name.slice(0,2).toUpperCase())}</span><img src="${esc(p.image)}" alt="${esc(p.name)} logo" onerror="this.hidden=true"></div>
   <div class="detail-glow"></div>
-</div><div class="detail-info reveal"><div class="eyebrow">ROW.GG / ${slug.toUpperCase()}</div><h1>${p.name}</h1><div class="detail-rating">★ ${avg} <span>(${reviews.length} reviews)</span></div><p>${p.desc}</p><div class="product-facts"><span><i></i> Available</span><span>Version 1.0.0</span></div><h2>Official website</h2><p>Continue to the publisher's official website for product information and downloads.</p><a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">Visit official website ↗</a></div>
+</div><div class="detail-info reveal"><div class="eyebrow">ROW.GG / ${slug.toUpperCase()}</div><h1>${p.name}</h1><div class="detail-rating">★ ${avg} <span>(${reviews.length} reviews)</span></div><p>${p.desc}</p><div class="product-facts"><span><i></i> Available</span><span>Version 1.0.0</span></div><h2>Official website</h2><p>Continue to the publisher's official website for product information and downloads.</p><a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">Download</a></div>
  <section class="reviews reveal"><div class="reviews-heading"><div><div class="eyebrow">Community feedback</div><h2>Ratings & reviews</h2></div><span class="review-total">${reviews.length} reviews</span></div><form class="reviewform" id="reviewform"><select id="rating" aria-label="Rating"><option value="5">★★★★★ 5 stars</option><option value="4">★★★★☆ 4 stars</option><option value="3">★★★☆☆ 3 stars</option><option value="2">★★☆☆☆ 2 stars</option><option value="1">★☆☆☆☆ 1 star</option></select><textarea id="reviewtext" maxlength="2000" rows="2" placeholder="Share your experience…"></textarea><button class="btn">Post review ↗</button></form><div class="review-list">${reviews.map(r=>`<div class="review"><div class="review-top"><b>★ ${Number(r.rating)||0}/5</b><span>${esc(names[r.user_id]||"ROW.GG member")}</span></div><p>${esc(r.review_text||"No comment")}</p></div>`).join("")||'<p class="muted">No reviews yet. Be the first to share your experience.</p>'}</div></section></section>`;
  document.querySelector("#reviewform").onsubmit=async e=>{
   e.preventDefault();if(!user){toast("Log in to post a review.");go("/log-in");return}if(!sb){toast("Supabase is not configured.");return}
