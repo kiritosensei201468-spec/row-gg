@@ -306,7 +306,7 @@ function settingsPage(){
  <div class="settings-row"><div><b>Password</b><span>••••••••</span></div><button class="settings-edit" id="edit-password">Change</button></div>
  </div>
  <div class="settings-card"><div class="settings-section-title">Connected accounts</div>
- <div class="settings-row roblox-setting"><div class="roblox-setting-info"><div class="roblox-mark">R</div><div><b>Username</b><span id="roblox-account-status">${esc(robloxName)}</span></div></div><button class="settings-edit" id="edit-roblox">Edit</button></div>
+ <div class="settings-row"><div><b>Roblox account</b><span id="roblox-account-status">${esc(robloxName)}</span></div><button class="settings-edit" id="edit-roblox">Edit</button></div>
  <p class="settings-help">Linking will verify ownership through Roblox sign-in. ROW.GG will never ask for your Roblox password.</p>
  </div>
  <div class="settings-card"><div class="settings-section-title">Preferences</div>
