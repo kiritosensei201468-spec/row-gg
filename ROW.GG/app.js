@@ -55,8 +55,9 @@ document.addEventListener("click",e=>{const a=e.target.closest("a");if(a&&a.orig
 onpopstate=render;
 async function loadProfile(){
  if(!sb||!user){profile=null;return}
- const {data,error}=await sb.from("profiles").select("id,username,roblox_user_id,roblox_username,roblox_avatar_url").eq("id",user.id).maybeSingle();
- if(!error)profile=data;
+ let result=await sb.from("profiles").select("id,username,roblox_user_id,roblox_username,roblox_avatar_url").eq("id",user.id).maybeSingle();
+ if(result.error && /roblox_(user_id|username|avatar_url)/i.test(result.error.message||"")) result=await sb.from("profiles").select("id,username").eq("id",user.id).maybeSingle();
+ if(!result.error)profile=result.data;
 }
   function showLogoutModal() {
   if (document.querySelector("#logout-modal")) return;
