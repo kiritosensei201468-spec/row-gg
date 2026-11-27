@@ -55,7 +55,7 @@ document.addEventListener("click",e=>{const a=e.target.closest("a");if(a&&a.orig
 onpopstate=render;
 async function loadProfile(){
  if(!sb||!user){profile=null;return}
- const {data,error}=await sb.from("profiles").select("id,username").eq("id",user.id).maybeSingle();
+ const {data,error}=await sb.from("profiles").select("id,username,roblox_user_id,roblox_username,roblox_avatar_url").eq("id",user.id).maybeSingle();
  if(!error)profile=data;
 }
   function showLogoutModal() {
@@ -337,7 +337,28 @@ function settingsPage(){
    toast("Password updated.");msg.innerHTML="";
   };
  };
- document.querySelector("#edit-roblox").onclick=()=>toast("Roblox verification is not configured yet. Your account will not be linked until official Roblox sign-in is ready.");
+ document.querySelector("#edit-roblox").onclick=async()=>{
+  if(!sb||!user){toast("Please log in first.");return}
+  const button=document.querySelector("#edit-roblox");
+  button.disabled=true;button.textContent="Connecting…";
+  try{
+   const {data,error}=await sb.functions.invoke("roblox-oauth",{body:{action:"start"}});
+   if(error)throw error;
+   if(!data?.authorization_url)throw new Error(data?.error||"Could not start Roblox verification.");
+   location.assign(data.authorization_url);
+  }catch(error){toast(error.message||"Could not start Roblox verification.");button.disabled=false;button.textContent="Edit"}
+ };
+}
+async function handleRobloxReturn(){
+ const params=new URLSearchParams(location.search);
+ const result=params.get("roblox");
+ if(!result)return;
+ history.replaceState({}, "", "/account/settings");
+ if(result==="success"){
+  await loadProfile();navRender();toast("Roblox account verified and connected!");
+ }else{
+  toast(params.get("reason")==="already_linked"?"That Roblox account is already linked to another ROW.GG account.":"Roblox verification was cancelled or failed.");
+ }
 }
 async function render() {
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -621,7 +642,7 @@ document.querySelector("#chat-open").onclick=openChat;
 document.querySelector("#chat-close").onclick=()=>{document.querySelector("#chat").classList.remove("open");document.querySelector("#shade").classList.remove("open")};
 document.querySelector("#shade").onclick=document.querySelector("#chat-close").onclick;
 if(sb)sb.auth.onAuthStateChange(async(_e,s)=>{user=s?.user||null;profile=null;if(user)await loadProfile();navRender();chatStarted=false});
-refresh().then(render);
+refresh().then(async()=>{await handleRobloxReturn();render()});
 })();
 
 
