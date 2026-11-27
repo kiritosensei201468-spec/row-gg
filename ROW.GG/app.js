@@ -611,7 +611,8 @@ document.querySelector("#site-menu-logout").onclick = () => {
 };
 document.querySelector("#sidebar-minigames").onclick = () => toast("Minigames are not available now.");
 document.addEventListener("click", event => {
-  if (!event.target.closest(".site-menu-wrap")) closeSiteMenu();
+  if (event.target.closest("#site-menu a")) closeSiteMenu();
+  else if (!event.target.closest(".site-menu-wrap")) closeSiteMenu();
 });
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") closeSiteMenu();
