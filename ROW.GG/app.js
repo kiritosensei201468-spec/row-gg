@@ -117,10 +117,18 @@ async function loadProfile(){
   modal.querySelector(".logout-cancel").focus();
 }
 function navRender(){
- if(!user){nav.innerHTML='<a class="nav-login" href="/log-in">Log in</a>';return}
- nav.innerHTML=`<div class="account-wrap"><button id="userbtn" class="account-btn"><span class="avatar">${esc(displayName().slice(0,1).toUpperCase())}</span>${esc(displayName())}</button><a class="vip-nav" href="/purchase/Vip">VIP</a><div id="usermenu" class="account-menu" hidden><div class="account-label">SIGNED IN AS</div><b>${esc(displayName())}</b><button id="logout">Log out ↗</button></div></div>`;
- document.querySelector("#userbtn").onclick=()=>{const m=document.querySelector("#usermenu");m.hidden=!m.hidden};
- document.querySelector("#logout").onclick = showLogoutModal;
+ if(!user){nav.innerHTML='<a class="nav-login" href="/log-in">Log in</a>';}
+ else {nav.innerHTML='<a class="vip-nav" href="/purchase/Vip">VIP</a>';}
+ const display=profile?.roblox_username||displayName();
+ const avatar=profile?.roblox_avatar_url||"";
+ const avatarEl=document.querySelector("#sidebar-avatar");
+ const displayEl=document.querySelector("#sidebar-display");
+ const usernameEl=document.querySelector("#sidebar-username");
+ if(avatarEl){avatarEl.innerHTML=avatar?`<img src="${esc(avatar)}" alt="">`:esc(display.slice(0,1).toUpperCase());}
+ if(displayEl)displayEl.textContent=display;
+ if(usernameEl)usernameEl.textContent=user?`@${profile?.roblox_username||displayName()}`:"Sign in to your account";
+ const logout=document.querySelector("#site-menu-logout");
+ if(logout)logout.hidden=!user;
 }
 async function refresh(){
  if(sb){const {data:{session}}=await sb.auth.getSession();user=session?.user||null;await loadProfile()}
@@ -287,6 +295,50 @@ function showPaymentNotice() {
     setTimeout(() => notice.remove(), 300);
   }, 3000);
 }
+function settingsPage(){
+ if(!user){app.innerHTML='<section class="settings-shell"><div class="settings-card"><h1>Sign in required</h1><p>Log in to manage your ROW.GG account settings.</p><a class="btn" href="/log-in">Log in</a></div></section>';return}
+ const robloxName=profile?.roblox_username||"Not binded";
+ const linked=!!profile?.roblox_username;
+ app.innerHTML=`<section class="settings-shell"><div class="settings-heading"><div class="eyebrow">YOUR ACCOUNT</div><h1>Account <span class="gradient">settings.</span></h1><p>Manage your ROW.GG profile and account security.</p></div>
+ <div class="settings-card"><div class="settings-section-title">Profile</div>
+ <div class="settings-row"><div><b>Username</b><span id="settings-current-name">${esc(displayName())}</span></div><button class="settings-edit" id="edit-username">Edit</button></div>
+ <div class="settings-row"><div><b>Email</b><span>${esc(user.email||"Not available")}</span></div><span class="settings-status">Account email</span></div>
+ <div class="settings-row"><div><b>Password</b><span>••••••••</span></div><button class="settings-edit" id="edit-password">Change</button></div>
+ </div>
+ <div class="settings-card"><div class="settings-section-title">Connected accounts</div>
+ <div class="settings-row roblox-setting"><div class="roblox-setting-info"><div class="roblox-mark">R</div><div><b>Roblox account</b><span id="roblox-account-status">${esc(robloxName)}</span></div></div><button class="settings-edit" id="edit-roblox">${linked?"Edit":"Edit"}</button></div>
+ <p class="settings-help">Linking will verify ownership through Roblox sign-in. ROW.GG will never ask for your Roblox password.</p>
+ </div>
+ <div class="settings-card"><div class="settings-section-title">Preferences</div>
+ <div class="settings-row"><div><b>Language</b><span>English</span></div><span class="settings-status">More languages coming later</span></div>
+ <div class="settings-row"><div><b>Appearance</b><span>Dark theme</span></div><span class="settings-status">Default</span></div>
+ </div><div id="settings-message" class="settings-message" aria-live="polite"></div></section>`;
+ document.querySelector("#edit-username").onclick=()=>{
+  const current=profile?.username||"";
+  const row=document.querySelector("#settings-current-name");
+  row.innerHTML=`<input class="settings-inline-input" id="new-username" value="${esc(current)}" minlength="3" maxlength="20" autocomplete="username"><button class="settings-save" id="save-username">Save</button><button class="settings-cancel" id="cancel-username">Cancel</button>`;
+  document.querySelector("#cancel-username").onclick=()=>settingsPage();
+  document.querySelector("#save-username").onclick=async()=>{
+   const value=document.querySelector("#new-username").value.trim();
+   if(!validName(value)){toast("Use 3–20 letters, numbers or underscores.");return}
+   const {error}=await sb.from("profiles").update({username:value}).eq("id",user.id);
+   if(error){toast(error.message);return}
+   await loadProfile();navRender();toast("Username updated.");settingsPage();
+  };
+ };
+ document.querySelector("#edit-password").onclick=()=>{
+  const msg=document.querySelector("#settings-message");
+  msg.innerHTML='<div class="settings-inline-form"><label for="new-password">New password</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button class="settings-save" id="save-password">Update password</button></div>';
+  document.querySelector("#save-password").onclick=async()=>{
+   const value=document.querySelector("#new-password").value;
+   if(value.length<8){toast("Password must be at least 8 characters.");return}
+   const {error}=await sb.auth.updateUser({password:value});
+   if(error){toast(error.message);return}
+   toast("Password updated.");msg.innerHTML="";
+  };
+ };
+ document.querySelector("#edit-roblox").onclick=()=>toast("Roblox verification is not configured yet. Your account will not be linked until official Roblox sign-in is ready.");
+}
 async function render() {
   const p = location.pathname.replace(/\/+$/, "") || "/";
   const lower = p.toLowerCase();
@@ -319,6 +371,8 @@ async function render() {
     auth(false);
   } else if (lower === "/sign-up") {
     auth(true);
+  } else if (lower === "/account/settings") {
+    settingsPage();
   } else if (lower === "/purchase/vip") {
     app.innerHTML = vipPurchasePage();
     document.querySelector("#vip-buy").onclick = showPaymentNotice;
@@ -555,6 +609,7 @@ document.querySelector("#site-menu-logout").onclick = () => {
   closeSiteMenu();
   showLogoutModal();
 };
+document.querySelector("#sidebar-minigames").onclick = () => toast("Minigames are not available now.");
 document.addEventListener("click", event => {
   if (!event.target.closest(".site-menu-wrap")) closeSiteMenu();
 });
