@@ -416,7 +416,11 @@ async function render() {
     app.innerHTML = '<section class="catalog empty-catalog"><div class="eyebrow">Free Fire collection</div><h1>Free Fire <span class="gradient">applications.</span></h1><div class="game-empty-state">Sorry, there are no applications available.</div></section>';
   } else if (detailPage) {
     await detail(p.split("/").pop(), robloxCatalog ? "/Roblox/products" : "/products", robloxCatalog ? robloxProducts : products);
-  } else if (lower === "/privacy") {\n    policyPage("privacy");\n  } else if (lower === "/terms") {\n    policyPage("terms");\n  } else if (lower === "/faq") {
+  } else if (lower === "/privacy") {
+    policyPage("privacy");
+  } else if (lower === "/terms") {
+    policyPage("terms");
+  } else if (lower === "/faq") {
     app.innerHTML = '<section class="catalog faq-page"><div class="eyebrow">Help center</div><h1>Frequently asked <span class="gradient">questions.</span></h1><article class="faq-item"><h2>What is ROW.GG?</h2><p>ROW.GG is a community website for discovering applications, reading reviews and chatting with other members.</p></article><article class="faq-item"><h2>How do I browse applications?</h2><p>Open Products to see the combined collection, or use Games to browse a specific game category.</p></article><article class="faq-item"><h2>Do I need an account?</h2><p>Sign in to access product pages, post reviews and use community features.</p></article><article class="faq-item"><h2>Why does Free Fire have no applications yet?</h2><p>The Free Fire collection is not available yet. Check back later for updates.</p></article></section>';
   } else if (lower === "/log-in") {
     auth(false);
