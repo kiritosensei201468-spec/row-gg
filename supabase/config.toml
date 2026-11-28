@@ -1,0 +1,4 @@
+project_id = "enrpidtrrbhmsqszpwbs"
+
+[functions.rowgg-security]
+verify_jwt = false
