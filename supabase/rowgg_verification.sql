@@ -20,6 +20,10 @@ alter table public.rowgg_verification_challenges enable row level security;
 revoke all on public.rowgg_verification_challenges from anon, authenticated;
 grant all on public.rowgg_verification_challenges to service_role;
 
+-- Profile changes must go through the verification Edge Function.
+-- Service-role operations (including trusted OAuth callbacks) remain permitted.
+revoke update on public.profiles from authenticated;
+
 -- Old/expired challenge cleanup (safe to run repeatedly).
 delete from public.rowgg_verification_challenges
 where expires_at < now() - interval '1 day';
