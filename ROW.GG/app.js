@@ -245,17 +245,19 @@ function auth(signup){
  const displayField=signup?`<div class="field"><label for="displayname">DISPLAY NAME</label><input id="displayname" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" placeholder="Your display name" autocomplete="nickname" required><small>3–20 characters · letters, numbers and underscores</small></div>`:"";
  app.innerHTML=`<section class="authwrap"><div class="auth reveal"><div class="auth-mark">R</div><div class="eyebrow">ROW.GG ACCOUNT</div><h1>${signup?"Create your account.":"Welcome back."}</h1><p>${signup?"Join ROW.GG to review products and chat.":"Log in to continue to ROW.GG."}</p><form id="authform">${displayField}<div class="field"><label for="email">EMAIL</label><input id="email" type="email" autocomplete="email" required></div><div class="field"><label for="password">PASSWORD</label><input id="password" type="password" minlength="8" autocomplete="${signup?"new-password":"current-password"}" required></div><button class="btn auth-submit">${signup?"Create account":"Log in"}</button><div id="formmsg" aria-live="polite"></div></form><p class="auth-switch">${signup?'Already registered? <a href="/log-in">Log in</a>':'New here? <a href="/sign-up">Create an account</a>'}</p></div></section>`;
  document.querySelector("#authform").onsubmit=async e=>{
-  e.preventDefault();const m=document.querySelector("#formmsg"),button=e.currentTarget.querySelector("button");
+  e.preventDefault();
+  const m=document.querySelector("#formmsg"),button=e.currentTarget.querySelector("button");
   if(!sb){m.className="error";m.textContent="Supabase configuration is missing.";return}
   const username=signup?document.querySelector("#displayname").value.trim():"",email=document.querySelector("#email").value.trim(),password=document.querySelector("#password").value;
   if(signup&&!validName(username)){m.className="error";m.textContent="Display name must be 3–20 characters and use only letters, numbers or underscores.";return}
-  button.disabled=true;button.textContent=signup?"Creating account…":"Logging in…";
+  button.disabled=true;button.textContent=signup?"Sending verification code…":"Logging in…";
   if(signup){
    const {data,error}=await sb.auth.signUp({email,password,options:{data:{username}}});
    if(error){m.className="error";m.textContent=error.message;button.disabled=false;button.textContent="Create account";return}
-   if(data.session){await refresh();toast("Welcome to ROW.GG, "+username+"!");go(getLoginDestination());return}
-   m.className="message";m.textContent="Account created. If email confirmation is enabled in Supabase, turn it off under Authentication → Providers → Email to allow free instant sign-in.";
-   button.disabled=false;button.textContent="Create account";
+   if(data.session){
+    await refresh();toast("Welcome to ROW.GG, "+username+"!");go(getLoginDestination());return;
+   }
+   showSignupVerification(email,username);
   }else{
    const {error}=await sb.auth.signInWithPassword({email,password});
    if(error){m.className="error";m.textContent=error.message;button.disabled=false;button.textContent="Log in";return}
@@ -263,6 +265,31 @@ function auth(signup){
   }
  };
  revealElements();
+}
+function showSignupVerification(email,username){
+ app.innerHTML=`<section class="authwrap"><div class="auth reveal is-visible"><div class="auth-mark">R</div><div class="eyebrow">ROW.GG EMAIL SECURITY</div><h1>Check your <span class="gradient">inbox.</span></h1><p>We sent a 6-digit verification code to <strong>${esc(email)}</strong>. Enter it below to finish creating your account.</p><form id="otpform"><div class="field"><label for="signup-otp">VERIFICATION CODE</label><input id="signup-otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required></div><button class="btn auth-submit" type="submit">Verify email</button><div id="otpmsg" aria-live="polite"></div></form><p class="auth-switch"><button class="text-link" id="resend-otp" type="button">Resend code</button> · <a href="/sign-up">Start over</a></p></div></section>`;
+ const form=document.querySelector("#otpform"),input=document.querySelector("#signup-otp"),message=document.querySelector("#otpmsg"),verifyButton=form.querySelector("button"),resendButton=document.querySelector("#resend-otp");
+ input.focus();
+ input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
+ form.onsubmit=async e=>{
+  e.preventDefault();
+  const token=input.value.trim();
+  if(!/^\d{6}$/.test(token)){message.className="error";message.textContent="Enter the 6-digit code from your email.";return}
+  verifyButton.disabled=true;verifyButton.textContent="Verifying…";message.textContent="";
+  const {error}=await sb.auth.verifyOtp({email,token,type:"signup"});
+  if(error){message.className="error";message.textContent=error.message;verifyButton.disabled=false;verifyButton.textContent="Verify email";return}
+  await refresh();
+  toast("Email verified. Welcome to ROW.GG, "+username+"!");
+  go(getLoginDestination());
+ };
+ resendButton.onclick=async()=>{
+  resendButton.disabled=true;resendButton.textContent="Sending…";message.textContent="";
+  const {error}=await sb.auth.resend({type:"signup",email});
+  if(error){message.className="error";message.textContent=error.message;resendButton.disabled=false;resendButton.textContent="Resend code";return}
+  message.className="message";message.textContent="A new verification code has been sent.";
+  resendButton.textContent="Resend code";
+  setTimeout(()=>{resendButton.disabled=false},30000);
+ };
 }
 function revealElements(){
  const els=document.querySelectorAll(".reveal:not(.is-visible)");
