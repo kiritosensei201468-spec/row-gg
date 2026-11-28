@@ -250,7 +250,7 @@ function auth(signup){
   if(!sb){m.className="error";m.textContent="Supabase configuration is missing.";return}
   const username=signup?document.querySelector("#displayname").value.trim():"",email=document.querySelector("#email").value.trim(),password=document.querySelector("#password").value;
   if(signup&&!validName(username)){m.className="error";m.textContent="Display name must be 3–20 characters and use only letters, numbers or underscores.";return}
-  button.disabled=true;button.textContent=signup?"Sending verification code…":"Logging in…";
+  button.disabled=true;button.textContent=signup?"Sending verification code…":"Checking login…";
   if(signup){
    const {data,error}=await sb.auth.signUp({email,password,options:{data:{username}}});
    if(error){m.className="error";m.textContent=error.message;button.disabled=false;button.textContent="Create account";return}
@@ -259,36 +259,55 @@ function auth(signup){
    }
    showSignupVerification(email,username);
   }else{
-   const {error}=await sb.auth.signInWithPassword({email,password});
-   if(error){m.className="error";m.textContent=error.message;button.disabled=false;button.textContent="Log in";return}
-   await refresh();toast("Welcome back, "+displayName()+"!");go(getLoginDestination());
+   const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"login_start",email,password}});
+   if(error||!data?.challenge_id){m.className="error";m.textContent=data?.error||error?.message||"Could not start email verification. Please try again.";button.disabled=false;button.textContent="Log in";return}
+   showLoginVerification(email,data.challenge_id);
   }
  };
  revealElements();
 }
+function showLoginVerification(email,initialChallengeId){
+ let challengeId=initialChallengeId;
+ app.innerHTML=`<section class="authwrap"><div class="auth reveal is-visible"><div class="auth-mark">R</div><div class="eyebrow">ROW.GG EMAIL SECURITY</div><h1>Verify your <span class="gradient">login.</span></h1><p>We sent a 6-digit verification code to <strong>${esc(email)}</strong>. Enter it to finish signing in.</p><form id="login-otp-form"><div class="field"><label for="login-otp">VERIFICATION CODE</label><input id="login-otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required></div><button class="btn auth-submit" type="submit">Verify and log in</button><div id="login-otp-message" aria-live="polite"></div></form><p class="auth-switch"><button class="text-link" id="login-resend-otp" type="button">Resend code</button> · <a href="/log-in">Cancel</a></p></div></section>`;
+ const form=document.querySelector("#login-otp-form"),input=document.querySelector("#login-otp"),message=document.querySelector("#login-otp-message"),verifyButton=form.querySelector("button"),resendButton=document.querySelector("#login-resend-otp");
+ input.focus();input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
+ form.onsubmit=async e=>{
+  e.preventDefault();
+  const code=input.value.trim();
+  if(!/^\d{6}$/.test(code)){message.className="error";message.textContent="Enter the 6-digit code from your email.";return}
+  verifyButton.disabled=true;verifyButton.textContent="Verifying…";message.textContent="";
+  const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"login_verify",challenge_id:challengeId,code}});
+  if(error||!data?.access_token||!data?.refresh_token){message.className="error";message.textContent=data?.error||error?.message||"Verification failed. Please request a new code.";verifyButton.disabled=false;verifyButton.textContent="Verify and log in";return}
+  const {error:sessionError}=await sb.auth.setSession({access_token:data.access_token,refresh_token:data.refresh_token});
+  if(sessionError){message.className="error";message.textContent=sessionError.message;verifyButton.disabled=false;verifyButton.textContent="Verify and log in";return}
+  await refresh();toast("Email verified. Welcome back, "+displayName()+"!");go(getLoginDestination());
+ };
+ resendButton.onclick=async()=>{
+  resendButton.disabled=true;resendButton.textContent="Sending…";message.textContent="";
+  const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"login_resend",challenge_id:challengeId}});
+  if(error||!data?.challenge_id){message.className="error";message.textContent=data?.error||error?.message||"Could not resend the code.";resendButton.disabled=false;resendButton.textContent="Resend code";return}
+  challengeId=data.challenge_id;input.value="";message.className="message";message.textContent="A new verification code has been sent.";
+  resendButton.textContent="Resend code";setTimeout(()=>{resendButton.disabled=false},30000);
+ };
+}
 function showSignupVerification(email,username){
  app.innerHTML=`<section class="authwrap"><div class="auth reveal is-visible"><div class="auth-mark">R</div><div class="eyebrow">ROW.GG EMAIL SECURITY</div><h1>Check your <span class="gradient">inbox.</span></h1><p>We sent a 6-digit verification code to <strong>${esc(email)}</strong>. Enter it below to finish creating your account.</p><form id="otpform"><div class="field"><label for="signup-otp">VERIFICATION CODE</label><input id="signup-otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required></div><button class="btn auth-submit" type="submit">Verify email</button><div id="otpmsg" aria-live="polite"></div></form><p class="auth-switch"><button class="text-link" id="resend-otp" type="button">Resend code</button> · <a href="/sign-up">Start over</a></p></div></section>`;
  const form=document.querySelector("#otpform"),input=document.querySelector("#signup-otp"),message=document.querySelector("#otpmsg"),verifyButton=form.querySelector("button"),resendButton=document.querySelector("#resend-otp");
- input.focus();
- input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
+ input.focus();input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
  form.onsubmit=async e=>{
-  e.preventDefault();
-  const token=input.value.trim();
+  e.preventDefault();const token=input.value.trim();
   if(!/^\d{6}$/.test(token)){message.className="error";message.textContent="Enter the 6-digit code from your email.";return}
   verifyButton.disabled=true;verifyButton.textContent="Verifying…";message.textContent="";
   const {error}=await sb.auth.verifyOtp({email,token,type:"signup"});
   if(error){message.className="error";message.textContent=error.message;verifyButton.disabled=false;verifyButton.textContent="Verify email";return}
-  await refresh();
-  toast("Email verified. Welcome to ROW.GG, "+username+"!");
-  go(getLoginDestination());
+  await refresh();toast("Email verified. Welcome to ROW.GG, "+username+"!");go(getLoginDestination());
  };
  resendButton.onclick=async()=>{
   resendButton.disabled=true;resendButton.textContent="Sending…";message.textContent="";
   const {error}=await sb.auth.resend({type:"signup",email});
   if(error){message.className="error";message.textContent=error.message;resendButton.disabled=false;resendButton.textContent="Resend code";return}
   message.className="message";message.textContent="A new verification code has been sent.";
-  resendButton.textContent="Resend code";
-  setTimeout(()=>{resendButton.disabled=false},30000);
+  resendButton.textContent="Resend code";setTimeout(()=>{resendButton.disabled=false},30000);
  };
 }
 function revealElements(){
@@ -352,6 +371,35 @@ function showPaymentNotice() {
     setTimeout(() => notice.remove(), 300);
   }, 3000);
 }
+async function startSettingsVerification(operation,value){
+ if(!sb||!user){toast("Please sign in again.");return}
+ const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"settings_start",operation,value}});
+ if(error||!data?.challenge_id){toast(data?.error||error?.message||"Could not send a verification code.");return}
+ showSettingsVerification(operation,value,data.challenge_id,data.email||user.email);
+}
+function showSettingsVerification(operation,value,challengeId,email){
+ document.querySelector("#account-verify-modal")?.remove();
+ const modal=document.createElement("div");modal.id="account-verify-modal";modal.className="account-verify-overlay";
+ modal.innerHTML=`<div class="account-verify-dialog" role="dialog" aria-modal="true" aria-labelledby="account-verify-title"><div class="eyebrow">ROW.GG ACCOUNT SECURITY</div><h2 id="account-verify-title">Verify this change</h2><p>A 6-digit code was sent to <strong>${esc(email)}</strong>. Your ${operation==="username"?"username":"password"} will only change after verification.</p><form id="account-verify-form"><label for="account-verify-code">VERIFICATION CODE</label><input id="account-verify-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required><div id="account-verify-message" aria-live="polite"></div><button class="btn auth-submit" type="submit">Verify and save</button></form><div class="account-verify-actions"><button type="button" id="account-verify-resend">Resend code</button><button type="button" id="account-verify-cancel">Cancel</button></div></div></div>`;
+ document.body.appendChild(modal);
+ const form=modal.querySelector("#account-verify-form"),input=modal.querySelector("#account-verify-code"),message=modal.querySelector("#account-verify-message"),submit=form.querySelector("button"),resend=modal.querySelector("#account-verify-resend");
+ input.focus();input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
+ modal.querySelector("#account-verify-cancel").onclick=()=>modal.remove();
+ form.onsubmit=async e=>{
+  e.preventDefault();const code=input.value.trim();
+  if(!/^\d{6}$/.test(code)){message.className="error";message.textContent="Enter the 6-digit code.";return}
+  submit.disabled=true;submit.textContent="Verifying…";message.textContent="";
+  const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"settings_verify",operation,challenge_id:challengeId,code,value}});
+  if(error||!data?.success){message.className="error";message.textContent=data?.error||error?.message||"Could not verify this change.";submit.disabled=false;submit.textContent="Verify and save";return}
+  modal.remove();await loadProfile();navRender();toast(operation==="username"?"Username updated.":"Password updated.");settingsPage();
+ };
+ resend.onclick=async()=>{
+  resend.disabled=true;resend.textContent="Sending…";
+  const {data,error}=await sb.functions.invoke("rowgg-security",{body:{action:"settings_resend",challenge_id:challengeId}});
+  if(error||!data?.challenge_id){message.className="error";message.textContent=data?.error||error?.message||"Could not resend code.";resend.disabled=false;resend.textContent="Resend code";return}
+  challengeId=data.challenge_id;message.className="message";message.textContent="A new code has been sent.";resend.textContent="Resend code";setTimeout(()=>{resend.disabled=false},30000);
+ };
+}
 function settingsPage(){
  if(!user){app.innerHTML='<section class="settings-shell"><div class="settings-card"><h1>Sign in required</h1><p>Log in to manage your ROW.GG account settings.</p><a class="btn" href="/log-in">Log in</a></div></section>';return}
  const robloxName=profile?.roblox_username||"Not binded";
@@ -378,20 +426,16 @@ function settingsPage(){
   document.querySelector("#save-username").onclick=async()=>{
    const value=document.querySelector("#new-username").value.trim();
    if(!validName(value)){toast("Use 3–20 letters, numbers or underscores.");return}
-   const {error}=await sb.from("profiles").update({username:value}).eq("id",user.id);
-   if(error){toast(error.message);return}
-   await loadProfile();navRender();toast("Username updated.");settingsPage();
+   await startSettingsVerification("username",value);
   };
  };
  document.querySelector("#edit-password").onclick=()=>{
   const msg=document.querySelector("#settings-message");
-  msg.innerHTML='<div class="settings-inline-form"><label for="new-password">New password</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button class="settings-save" id="save-password">Update password</button></div>';
+  msg.innerHTML='<div class="settings-inline-form"><label for="new-password">New password</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button class="settings-save" id="save-password">Continue</button></div>';
   document.querySelector("#save-password").onclick=async()=>{
    const value=document.querySelector("#new-password").value;
    if(value.length<8){toast("Password must be at least 8 characters.");return}
-   const {error}=await sb.auth.updateUser({password:value});
-   if(error){toast(error.message);return}
-   toast("Password updated.");msg.innerHTML="";
+   await startSettingsVerification("password",value);
   };
  };
  document.querySelector("#edit-roblox").onclick=async()=>{
