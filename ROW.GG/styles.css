@@ -1088,3 +1088,21 @@ header>nav{flex:1;justify-content:flex-end}
 .policy-bottom{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:28px 0}
 .policy-bottom .btn{margin:0}
 @media(max-width:520px){.policy-item{padding:17px}.policy-item h2{font-size:16px}.policy-item p{font-size:12px}}
+
+
+/* ROW.GG account verification modal */
+.account-verify-overlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:18px;background:#05050bd9;backdrop-filter:blur(8px);animation:accountVerifyFade .18s ease both}
+.account-verify-dialog{width:min(440px,100%);padding:28px;border:1px solid #ffffff24;border-radius:19px;background:linear-gradient(145deg,#191927,#0c0d14);box-shadow:0 24px 80px #000b}
+.account-verify-dialog h2{margin:9px 0;font:700 25px "Space Grotesk";color:#fff}
+.account-verify-dialog p{color:#a9a8b8;font-size:13px;line-height:1.7}
+.account-verify-dialog p strong{color:#e7e0ff;overflow-wrap:anywhere}
+.account-verify-dialog form{display:grid;gap:11px;margin-top:22px}
+.account-verify-dialog form label{font-size:11px;font-weight:800;letter-spacing:1px;color:#aaa8ba}
+.account-verify-dialog form input{width:100%;box-sizing:border-box;padding:15px;border:1px solid #ffffff28;border-radius:10px;background:#090a11;color:#fff;font-size:22px;letter-spacing:8px;text-align:center;outline:none}
+.account-verify-dialog form input:focus{border-color:#a58aff;box-shadow:0 0 0 3px #a58aff20}
+.account-verify-dialog .auth-submit{width:100%;margin-top:5px}
+.account-verify-actions{display:flex;justify-content:space-between;gap:15px;margin-top:17px}
+.account-verify-actions button{border:0;background:none;color:#bba5ff;font-size:12px;cursor:pointer}
+.account-verify-actions button:last-child{color:#a6a4b3}
+@keyframes accountVerifyFade{from{opacity:0}to{opacity:1}}
+@media(max-width:520px){.account-verify-dialog{padding:21px}}
