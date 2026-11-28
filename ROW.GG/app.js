@@ -255,7 +255,10 @@ function auth(signup){
    const {data,error}=await sb.auth.signUp({email,password,options:{data:{username}}});
    if(error){m.className="error";m.textContent=error.message;button.disabled=false;button.textContent="Create account";return}
    if(data.session){
-    await refresh();toast("Welcome to ROW.GG, "+username+"!");go(getLoginDestination());return;
+    await sb.auth.signOut();
+    m.className="error";
+    m.textContent="Email confirmation is disabled in Supabase. Enable email confirmations in Authentication settings so every new account must enter its 6-digit code.";
+    button.disabled=false;button.textContent="Create account";return;
    }
    showSignupVerification(email,username);
   }else{
